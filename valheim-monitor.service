@@ -7,9 +7,9 @@ Requires=valheim.service
 Type=simple
 ExecStart=/usr/local/bin/valheim_monitor.py
 Restart=on-failure
-RestartSec=30s  # Prevent frequent restarts by adding a 30-second delay
 User=ssh_username  # Replace with your Valheim server SSH username
-ExecStartPre=/bin/sleep 20  # Add a delay before starting to ensure dependencies are ready
+#RestartSec=30s  # Prevent frequent restarts by adding a 30-second delay
+#ExecStartPre=/bin/sleep 20  # Add a delay before starting to ensure dependencies are ready
 
 [Install]
 WantedBy=multi-user.target
