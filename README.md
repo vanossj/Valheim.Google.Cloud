@@ -362,9 +362,12 @@ chmod +x /etc/systemd/system/valheim-monitor.service
 
 ````bash
 ```bash
-sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
-sudo systemctl enable --now valheim-monitor.service
+sudo systemctl enable valheim-monitor.service
+sudo systemctl start valheim-monitor.service
+
+# check status to see if the service is running
+sudo systemctl status valheim-monitor.service
 ````
 
 ## Troubleshoot

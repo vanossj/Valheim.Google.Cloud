@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
+import logging
 import re
 import subprocess
 import time
-import logging
 from enum import Enum
 
 # Configure logging
@@ -13,21 +13,24 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+
 # Define the State Enum
 class State(Enum):
     INITIALIZING = "initializing"
     LOBBY_STARTED = "lobby started"
     PLAYER_COUNT = "player count"
 
+
 PLAYER_JOIN_RE = re.compile(r"Player joined server .* now (\d+) player\(s\)")
 PLAYER_LEAVE_RE = re.compile(r"Player connection lost server .* now (\d+) player\(s\)")
 LOBBY_STARTED_RE = re.compile(r"Session .* is active with 0 player\(s\)")
+CONNECTION_COUNT_RE = re.compile(r"Connections (\d+) ZDOS.*sent.*recv")
 VALHEIM_SERVICE_NAME = "valheim.service"
 GRACE_PERIOD = 15 * 60  # 15 minutes in seconds
 
 shutdown_time = None
 state = State.INITIALIZING  # Use the Enum for state
-player_count = None
+player_count = None  # none= noone joined yet
 
 
 def shutdown_vm():
@@ -47,20 +50,29 @@ def determine_initial_state():
     )
 
     for line in process.stdout:
-        if PLAYER_JOIN_RE.search(line):
-            player_count = int(PLAYER_JOIN_RE.search(line).group(1))
+        if m := PLAYER_JOIN_RE.search(line):
+            player_count = int(m.group(1))
             state = State.PLAYER_COUNT
             logging.info(f"Initial state determined: '{state.value}' {player_count}")
             return
-        elif PLAYER_LEAVE_RE.search(line):
-            player_count = int(PLAYER_LEAVE_RE.search(line).group(1))
+        elif m := PLAYER_LEAVE_RE.search(line):
+            player_count = int(m.group(1))
             state = State.PLAYER_COUNT
             logging.info(f"Initial state determined: '{state.value}' {player_count}")
             return
-        elif LOBBY_STARTED_RE.search(line):
+        elif m := LOBBY_STARTED_RE.search(line):
             state = State.LOBBY_STARTED
             logging.info(f"Initial state determined: '{state.value}'")
             return
+        elif m := CONNECTION_COUNT_RE.search(line):
+            connection_count = int(m.group(1))
+            if connection_count > 0:
+                state = State.PLAYER_COUNT
+                player_count = connection_count
+                logging.info(
+                    f"Initial state determined: '{state.value}' {player_count}"
+                )
+                return
 
     logging.info("No relevant logs found. Defaulting to 'initializing' state.")
 
@@ -72,16 +84,35 @@ def handle_log_line(line):
         state = State.LOBBY_STARTED
         logging.info(f"State changed to: {state.value}")
 
-    join_match = PLAYER_JOIN_RE.search(line)
-    if join_match:
+    if join_match := PLAYER_JOIN_RE.search(line):
         player_count = int(join_match.group(1))
         state = State.PLAYER_COUNT
         logging.info(f"State changed to: {state.value} {player_count}")
         shutdown_time = None  # Reset shutdown timer
         return
 
-    leave_match = PLAYER_LEAVE_RE.search(line)
-    if leave_match:
+    if connection_count_m := CONNECTION_COUNT_RE.search(line):
+        connection_count = int(connection_count_m.group(1))
+        if (
+            connection_count == 0
+            and shutdown_time is None
+            and state == State.PLAYER_COUNT
+        ):
+            # all players left, start shutdown timer
+            shutdown_time = time.time() + GRACE_PERIOD
+            logging.info("No players online. Shutdown timer started.")
+            return
+
+        elif connection_count > 0:
+            player_count = connection_count
+            state = State.PLAYER_COUNT
+            logging.info(f"State changed to: {state.value} {player_count}")
+            shutdown_time = None  # Reset shutdown timer
+            return
+
+        # else: no players online yet, do nothing
+
+    if leave_match := PLAYER_LEAVE_RE.search(line):
         player_count = int(leave_match.group(1))
         if player_count == 0:
             if shutdown_time is None:  # Start shutdown timer if not already set
