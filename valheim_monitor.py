@@ -26,7 +26,7 @@ PLAYER_LEAVE_RE = re.compile(r"Player connection lost server .* now (\d+) player
 LOBBY_STARTED_RE = re.compile(r"Session .* is active with 0 player\(s\)")
 CONNECTION_COUNT_RE = re.compile(r"Connections (\d+) ZDOS.*sent.*recv")
 VALHEIM_SERVICE_NAME = "valheim.service"
-GRACE_PERIOD = 15 * 60  # 15 minutes in seconds
+GRACE_PERIOD = 5 * 60  # 15 minutes in seconds
 
 shutdown_time = None
 state = State.INITIALIZING  # Use the Enum for state
@@ -36,7 +36,7 @@ player_count = None  # none= noone joined yet
 def shutdown_vm():
     """Shuts down the virtual machine."""
     logging.info("Virtual machine is shutting down due to inactivity.")
-    subprocess.run(["sudo", "shutdown", "-h", "now"])
+    subprocess.run(["sudo", "/sbin/shutdown", "-h", "now"])
 
 
 def determine_initial_state():

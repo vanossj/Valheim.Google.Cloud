@@ -338,27 +338,44 @@ Now you should be able to connect to your server in-game using the External IP s
 
 Instead of shutting down the server at a fixed time (see [Schedule Start/Stop](#optional-schedule-startstop)) you can also monitor the player count and shutdown the VM after all players have left for a certain time (e.g. 15 minutes).
 
-1. Copy `valheim_monitor.py` to `/usr/local/bin/valheim_monitor.py`
+1. modify sudoers file so that the user can access shutdown without password prompt:
 
-2. Make it executable:
+```bash
+sudo visudo
+```
+
+Add the following line at the end of the file (change "ssh_username" to your SSH username):
+
+```
+ssh_username ALL=(ALL) NOPASSWD: /sbin/shutdown
+```
+
+2. Copy `valheim_monitor.py` to `/usr/local/bin/valheim_monitor.py`
+
+3. Make it executable:
 
 ```bash
 chmod +x /usr/local/bin/valheim_monitor.py
 ```
 
-3. Modify `valheim-monitor.service` to set the user to the SSH username you used to setup the Valheim server (otherwise the monitor cannot read the Valheim logs)
+4. Modify `valheim-monitor.service` to set the user to the SSH username you used to setup the Valheim server (otherwise the monitor cannot read the Valheim logs)
    ```ini
    [Service]
    User=ssh_username  # Change to your Valheim server ssh user
    ```
-4. the Copy the following systemd service `valheim-monitor.service` to `/etc/systemd/system/valheim-monitor.service`
-5. Make it executable:
+5. Copy the following systemd service `valheim-monitor.service` to `/etc/systemd/system/valheim-monitor.service`
+
+```bash
+sudo cp /usr/local/bin/valheim_monitor.py /etc/systemd/system/valheim-monitor.service
+```
+
+6. Make it executable:
 
 ```bash
 chmod +x /etc/systemd/system/valheim-monitor.service
 ```
 
-6. Enable and start the monitor service:
+7. Enable and start the monitor service:
 
 ````bash
 ```bash
