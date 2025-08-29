@@ -44,8 +44,6 @@ if [[ $crossplay = "true" ]]; then
     crossplay_arg="-crossplay"
 fi
 
-log "Initialising noip.com DynDNS..."
-sudo noip2
 
 pidfile=valheim.pid
 log "Writing PID $$ to $pidfile..."

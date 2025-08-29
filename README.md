@@ -90,21 +90,22 @@ The following example uses noip.com (up to 3 DNS entries for free - but the entr
 - Create an account
 - After you verified your account, you will be asked to create your first DNS entry (e.g. "epicvalheim.hopto.org")
 
-Now you will need to install the [No-IP Dynamic Update Client](https://www.noip.com/support/knowledgebase/installing-the-linux-dynamic-update-client/) that will regulary transmit the VM's current IP to no-ip.com so that your DNS entry stays connected with your VM.  
+Now you will need to install the [No-IP Dynamic Update Client](https://www.noip.com/support/knowledgebase/install-linux-3-x-dynamic-update-client-duc) that will regulary transmit the VM's current IP to no-ip.com so that your DNS entry stays connected with your VM.  
 - Enter the following command in the SSH window:
 ```bash
-sudo apt install build-essential
-
-cd /usr/local/src
-curl -sqL "http://www.no-ip.com/client/linux/noip-duc-linux.tar.gz" | sudo tar xzf -
-
-cd noip-2.1.9-1
-sudo make
-sudo make install
-sudo noip2 -C
+cd ~
+wget --content-disposition https://www.noip.com/download/linux/latest
+tar xf noip-duc_3.3.0.tar.gz
+cd ~/noip-duc_3.3.0/binaries
+sudo apt install ./noip-duc_3.3.0_amd64.deb
 ```
-Enter your No-IP user/password when asked.  
-The Dynamic Update Client ("noip2") will be started in "start_server_custom.sh" script (see [Setup Dedicated Server Daemon](#setup-dedicated-server-daemon))
+
+run the program with command. Enter your No-IP user/password when asked.  
+```bash
+noip-duc
+```
+
+Follow the [instructions here](https://www.noip.com/support/knowledgebase/running-linux-duc-v3-0-startup-2) to setup a service to automaticaly update the dns record when the VM starts.
 
 
 ## Optional: Schedule Start/Stop
