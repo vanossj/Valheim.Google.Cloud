@@ -1,0 +1,15 @@
+[Unit]
+Description=Valheim Monitor Service
+After=network.target
+Requires=valheim.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/valheim_monitor.py
+Restart=on-failure
+#RestartSec=30s  # Prevent frequent restarts by adding a 30-second delay
+User=daemon_user # Change daemon_user to your username
+#ExecStartPre=/bin/sleep 20  # Add a delay before starting to ensure dependencies are ready
+
+[Install]
+WantedBy=multi-user.target

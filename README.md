@@ -26,6 +26,7 @@ Some notes before we start:
 - [Optional: Install MegaCMD](#optional-install-megacmd)
 - [Optional: Upload your world](#optional-upload-your-world)
 - [Setup Dedicated Server Daemon](#setup-dedicated-server-daemon)
+- [Optional: Valheim Monitor Service](optional-valheim-monitor-service)
 - [Troubleshoot](#troubleshoot)
 
 
@@ -290,6 +291,34 @@ The daemon should appear as 'running':
 ```
 
 Now you should be able to connect to your server in-game using the External IP shown at: https://console.cloud.google.com/compute/instances 
+
+
+## Optional: Valheim Monitor Service
+The Valheim Monitor is a systemd service that automatically shuts down your VM a set time after all players have disconnected from the server. This helps save costs by only running the server when players are online. Scheduled start/stop is still recommended as a fallback.
+
+How it works
+* The monitor watches the Valheim server logs for player activity.
+* When the player count drops to 0, it waits (default: 5 minutes) and then initiates a VM shutdown.
+* The monitor will wait indefinitely for the first player to join before starting the shutdown timer.
+
+Setup Instructions
+1. Ensure that python is installed `sudo apt install python3`
+2. Copy the monitor script `cp valheim_monitor.py /usr/local/bin/valheim_monitor.py`
+3. edit the `valheim-monitor.service` to set the `User` to be your ssh username
+4. Copy the service file `cp valheim-monitor.service /etc/systemd/system/valheim-monitor.service`
+5. reload the systemd service `sudo systemctl daemon-reload`
+6. Enable the service `sudo systemctl enable valheim-monitor`
+7. Start the service `sudo systemctl start valheim-monitor`
+8. you can check the status with `sudo systemctl status valheim-monitor`
+9. Monitor the monitor by looking at the logs `journalctl -u valheim-monitor.service -f`
+
+Configuration
+* You can adjust the shutdown timer in `valheim_monitor.py` by setting `GRACE_PERIOD` to the number of seconds to wait before shuting down after the last player leaves.
+
+Notes
+* The monitor only initiates shutdown after all players disconnect.
+* Scheduled start/stop is still recommended as a backup to ensure the server doesn't run indefinitely if the monitor fails.
+
 
 ## Troubleshoot
 Useful commands:
